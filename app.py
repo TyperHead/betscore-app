@@ -6,8 +6,7 @@ def get_odds():
     url = "https://api-football-v1.p.rapidapi.com/v2/odds/league/39/bookmaker/5"
 querystring = {"page": "1"}
 
-
-    headers = {
+headers = {
         "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
         "x-rapidapi-key": "48accb8b3cmsh0f6f533f6ec90bbp105f4djsna91c5c497224"
     }
