@@ -1,44 +1,51 @@
 import streamlit as st
-import json
 import pandas as pd
+import requests
 
-# Prosty system logowania
-def load_users():
-    with open("users.json", "r") as f:
-        return json.load(f)
+def get_odds():
+    url = "https://api-football-v1.p.rapidapi.com/v2/odds/league/865927/bookmaker/5"
+    querystring = {"page": "2"}
 
-def login(email, password):
-    users = load_users()
-    return users.get(email) == password
+    headers = {
+        "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+        "x-rapidapi-key": "48accb8b3cmsh0f6f533f6ec90bbp105f4djsna91c5c497224"
+    }
 
-# Przykładowe dane meczowe
-def get_matches():
-    data = [
-        {"Mecz": "Arsenal vs Chelsea", "Wynik": "2:1", "Kurs": 2.3, "Prawdopodobieństwo": 0.55},
-        {"Mecz": "Barcelona vs Real Madrid", "Wynik": "1:1", "Kurs": 3.1, "Prawdopodobieństwo": 0.30},
-        {"Mecz": "Bayern vs Dortmund", "Wynik": "3:2", "Kurs": 2.0, "Prawdopodobieństwo": 0.60}
-    ]
-    for d in data:
-        d["Value"] = round(d["Prawdopodobieństwo"] * d["Kurs"], 2)
-    return pd.DataFrame(data)
+    response = requests.get(url, headers=headers, params=querystring)
 
-# Interfejs użytkownika
-st.title("BetScore ⚽")
+    if response.status_code != 200:
+        return pd.DataFrame([{"Błąd": "Nie udało się pobrać danych"}])
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
+    data = response.json()
+    odds_list = []
 
-if not st.session_state.logged_in:
-    st.subheader("🔐 Zaloguj się")
-    email = st.text_input("Email")
-    password = st.text_input("Hasło", type="password")
-    if st.button("Zaloguj"):
-        if login(email, password):
-            st.session_state.logged_in = True
-            st.success("Zalogowano pomyślnie!")
-        else:
-            st.error("Nieprawidłowy email lub hasło.")
+    for item in data.get("api", {}).get("odds", []):
+        try:
+            match = f"{item['teams']['home']} vs {item['teams']['away']}"
+            league = item['league']['name']
+            bookmaker = item['bookmakers'][0]['name']
+            bets = item['bookmakers'][0]['bets']
+            for bet in bets:
+                if bet['label_name'].lower() == "match winner":
+                    for val in bet['values']:
+                        odds_list.append({
+                            "Mecz": match,
+                            "Zakład": val['value'],
+                            "Kurs": val['odd'],
+                            "Liga": league,
+                            "Bukmacher": bookmaker
+                        })
+        except Exception as e:
+            continue
+
+    return pd.DataFrame(odds_list)
+
+# Streamlit app
+st.title("⚽ Kursy bukmacherskie z API-Football (bet365)")
+
+df = get_odds()
+if df.empty:
+    st.warning("Brak danych.")
 else:
-    st.success("Jesteś zalogowany!")
-    st.subheader("📊 Mecze na dziś")
-    st.dataframe(get_matches(), use_container_width=True)
+    st.dataframe(df, use_container_width=True)
+
