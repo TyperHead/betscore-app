@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import pandas as pd
 
 # Prosty system logowania
 def load_users():
@@ -9,6 +10,17 @@ def load_users():
 def login(email, password):
     users = load_users()
     return users.get(email) == password
+
+# Przykładowe dane meczowe
+def get_matches():
+    data = [
+        {"Mecz": "Arsenal vs Chelsea", "Wynik": "2:1", "Kurs": 2.3, "Prawdopodobieństwo": 0.55},
+        {"Mecz": "Barcelona vs Real Madrid", "Wynik": "1:1", "Kurs": 3.1, "Prawdopodobieństwo": 0.30},
+        {"Mecz": "Bayern vs Dortmund", "Wynik": "3:2", "Kurs": 2.0, "Prawdopodobieństwo": 0.60}
+    ]
+    for d in data:
+        d["Value"] = round(d["Prawdopodobieństwo"] * d["Kurs"], 2)
+    return pd.DataFrame(data)
 
 # Interfejs użytkownika
 st.title("BetScore ⚽")
@@ -28,4 +40,5 @@ if not st.session_state.logged_in:
             st.error("Nieprawidłowy email lub hasło.")
 else:
     st.success("Jesteś zalogowany!")
-    st.write("Tutaj pojawi się lista meczów, kursy, value itd.")
+    st.subheader("📊 Mecze na dziś")
+    st.dataframe(get_matches(), use_container_width=True)
