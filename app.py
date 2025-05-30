@@ -3,8 +3,9 @@ import pandas as pd
 import requests
 
 def get_odds():
-    url = "https://api-football-v1.p.rapidapi.com/v2/odds/league/865927/bookmaker/5"
-    querystring = {"page": "2"}
+    url = "https://api-football-v1.p.rapidapi.com/v2/odds/league/39/bookmaker/5"
+querystring = {"page": "1"}
+
 
     headers = {
         "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
