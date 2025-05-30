@@ -13,6 +13,7 @@ querystring = {"page": "1"}
     }
 
     response = requests.get(url, headers=headers, params=querystring)
+    st.json(response.json())
 
     if response.status_code != 200:
         return pd.DataFrame([{"Błąd": "Nie udało się pobrać danych"}])
